@@ -1,0 +1,9 @@
+prefix=/com.docker.devenvironments.code/src/ping_pong/ping_service/target/debug/build/openssl-sys-fb5ebda47d0e63d0/out/openssl-build/install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: OpenSSL
+Description: Secure Sockets Layer and cryptography libraries and tools
+Version: 3.2.1
+Requires: libssl libcrypto
