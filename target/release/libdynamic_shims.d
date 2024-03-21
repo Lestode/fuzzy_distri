@@ -1,0 +1,1 @@
+/com.docker.devenvironments.code/target/release/libdynamic_shims.so: /com.docker.devenvironments.code/src/dynamic_shims/src/controller_connection.rs /com.docker.devenvironments.code/src/dynamic_shims/src/lib.rs

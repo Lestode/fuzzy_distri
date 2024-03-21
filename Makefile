@@ -1,21 +1,31 @@
-IMAGE_NAME=fuzzy-distri
-CONTAINER_NAME=fuzzy-distri
-PORTS=-p 8080:8080
-VOLUMES=-v $(PWD):/app
+DYNAMIC_SHIMS_DIR = /com.docker.devenvironments.code/src/dynamic_shims
+FUZZ_CONTROLLER_DIR = /com.docker.devenvironments.code/src/fuzz-controller
+PONG_SERVICE_DIR = /com.docker.devenvironments.code/src/ping_pong_sync/pong_service
+PING_SERVICE_DIR = /com.docker.devenvironments.code/src/ping_pong_sync/ping_service
+LIB_DIR = $(DYNAMIC_SHIMS_DIR)/target/release/libdynamic_shims.so
 
-# Docker build command
-build:
-	docker build -t $(IMAGE_NAME) .
 
-# Docker run command
-run:
-	docker run -it --name $(CONTAINER_NAME) $(PORTS) $(VOLUMES) $(IMAGE_NAME)
+# Default target
+all: build_shims build_fuzz_controller run_pong run_ping
 
-# Docker stop and remove container command
-clean:
-	docker stop $(CONTAINER_NAME)
-	docker rm $(CONTAINER_NAME)
+# Compile the dynamic shims library
+build_shims:
+	cd $(DYNAMIC_SHIMS_DIR) && \
+	cargo build --release
 
-# Check container logs
-logs:
-	docker logs $(CONTAINER_NAME)
+# Compile and run the fuzz-controller
+build_fuzz_controller:
+	cd $(FUZZ_CONTROLLER_DIR) && \
+	cargo run
+
+# Run the pong service with LD_PRELOAD
+run_pong:
+	cd $(PONG_SERVICE_DIR) && \
+	LD_PRELOAD=$(LIB_DIR) cargo run
+
+# Run the ping service with LD_PRELOAD
+run_ping:
+	cd $(PING_SERVICE_DIR) && \
+	LD_PRELOAD=$(LIB_DIR) cargo run
+
+.PHONY: build_shims build_fuzz_controller run_pong run_ping
