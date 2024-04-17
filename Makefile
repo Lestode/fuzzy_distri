@@ -2,6 +2,8 @@ DYNAMIC_SHIMS_DIR = /com.docker.devenvironments.code/src/dynamic_shims
 FUZZ_CONTROLLER_DIR = /com.docker.devenvironments.code/src/fuzz-controller
 PONG_SERVICE_DIR = /com.docker.devenvironments.code/src/ping_pong_sync/pong_service
 PING_SERVICE_DIR = /com.docker.devenvironments.code/src/ping_pong_sync/ping_service
+
+EXPERIMENTS = /com.docker.devenvironments.code/src/experiments
 LIB_DIR = /com.docker.devenvironments.code/target/release/libdynamic_shims.so
 
 
@@ -32,5 +34,9 @@ run_ping:
 run_ping_without_shims:
 	cd $(PING_SERVICE_DIR) && \
 	cargo run
+
+run_experiments:
+	cd $(EXPERIMENTS) && \
+	LD_PRELOAD=$(LIB_DIR) cargo run
 
 .PHONY: build_shims build_fuzz_controller run_pong run_ping

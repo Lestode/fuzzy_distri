@@ -13,6 +13,16 @@ pub unsafe fn call_original_accept4(
     }
 }
 
+pub unsafe fn call_original_getpid() -> Option<extern "C" fn() -> libc::pid_t> {
+    let getpid_cstr = CString::new("getpid").expect("CString::new failed");
+    let addr = dlsym(RTLD_NEXT, getpid_cstr.as_ptr());
+    if addr.is_null() {
+        None
+    } else {
+        Some(std::mem::transmute(addr))
+    }
+}
+
 pub unsafe fn call_original_sendto() -> Option<
     extern "C" fn(c_int, *const c_void, libc::size_t, c_int, *const sockaddr, socklen_t) -> ssize_t,
 > {
