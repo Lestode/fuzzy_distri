@@ -1,7 +1,8 @@
-use tiny_http;
 use reqwest;
+use tiny_http;
 
 fn main() {
+    env_logger::init();
     let server = tiny_http::Server::http("0.0.0.0:8081").unwrap();
     println!("Server running on http://0.0.0.0:8081");
 
@@ -9,7 +10,8 @@ fn main() {
         if request.url() == "/pong" {
             let response = match send_ping_to("http://localhost:8080/ping") {
                 Ok(_) => tiny_http::Response::from_string("all good"),
-                Err(_) => tiny_http::Response::from_string("Ping Service did not respond").with_status_code(500),
+                Err(_) => tiny_http::Response::from_string("Ping Service did not respond")
+                    .with_status_code(500),
             };
             let _ = request.respond(response);
         } else {

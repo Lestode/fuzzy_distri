@@ -1,7 +1,7 @@
 use tiny_http;
 
-
 fn main() {
+    env_logger::init();
     let server = tiny_http::Server::http("0.0.0.0:8080").unwrap();
 
     for request in server.incoming_requests() {
