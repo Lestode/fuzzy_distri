@@ -36,4 +36,6 @@ fn main() {
             _ => continue,
         }
     }
+
+    ptrace::detach(pid).expect("Failed to detach");
 }
