@@ -1,10 +1,12 @@
-DYNAMIC_SHIMS_DIR = /com.docker.devenvironments.code/src/dynamic_shims
-FUZZ_CONTROLLER_DIR = /com.docker.devenvironments.code/src/fuzz-controller
-PONG_SERVICE_DIR = /com.docker.devenvironments.code/src/ping_pong_sync/pong_service
-PING_SERVICE_DIR = /com.docker.devenvironments.code/src/ping_pong_sync/ping_service
+HOME = /home/user/Projects/fuzzy_distri
+DYNAMIC_SHIMS_DIR = $(HOME)/src/dynamic_shims
+FUZZ_CONTROLLER_DIR = $(HOME)/src/fuzz-controller
+PONG_SERVICE_DIR = $(HOME)/src/ping_pong_sync/pong_service
+PING_SERVICE_DIR = $(HOME)/src/ping_pong_sync/ping_service
+PTRACE_INTERRUPT = $(HOME)/src/ptrace_interrupt
 
-EXPERIMENTS = /com.docker.devenvironments.code/src/experiments
-LIB_DIR = /com.docker.devenvironments.code/target/release/libdynamic_shims.so
+EXPERIMENTS = $(HOME)/src/experiments
+LIB_DIR = $(HOME)/target/release/libdynamic_shims.so
 
 
 # Default target
@@ -35,8 +37,20 @@ run_ping_without_shims:
 	cd $(PING_SERVICE_DIR) && \
 	cargo run
 
-run_experiments:
+run_experiments_without_shims:
+	cd $(EXPERIMENTS) && \
+	cargo run
+
+run_experiments_shims:
 	cd $(EXPERIMENTS) && \
 	LD_PRELOAD=$(LIB_DIR) cargo run
+
+run_experiments_ptrace:
+	cd $(EXPERIMENTS) && \
+	cargo build && \
+	/home/user/Projects/fuzzy_distri/target/debug/experiments & \
+	app_pid=$$!; \
+	cd $(PTRACE_INTERRUPT) && \
+	cargo run -- $$app_pid
 
 .PHONY: build_shims build_fuzz_controller run_pong run_ping

@@ -6,13 +6,13 @@ use std::time::{Duration, Instant};
 fn main() {
     sleep(Duration::new(10, 0));
     let start = Instant::now();
-    for _ in 0..1000 {
+    for _ in 0..100000 {
         unsafe {
             black_box(libc::getpid());
         }
     }
     let total_duration = start.elapsed();
-    let average_duration = total_duration / 100;
+    let average_duration = total_duration / 100000;
 
     println!(
         "Average duration of getpid() syscall: {:?}",

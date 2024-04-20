@@ -23,6 +23,7 @@ fn main() {
         let status = waitpid(pid, None).expect("Failed to what for syscall");
         match status {
             WaitStatus::PtraceSyscall(_) => {
+                println!("Syscall called");
                 let regs = ptrace::getregs(pid).expect("Failed to get registers");
                 if regs.orig_rax == 39 {
                     // 39 is the syscall number for getpid on x86_64
@@ -37,5 +38,5 @@ fn main() {
         }
     }
 
-    ptrace::detach(pid).expect("Failed to detach");
+    ptrace::detach(pid, None);
 }

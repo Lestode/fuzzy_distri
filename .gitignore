@@ -3,7 +3,8 @@
 
 # Remove Cargo.lock from gitignore if creating an executable, leave it for libraries
 Cargo.lock
-
+.cargo/
+.rustup/
 # Generated files
 **/*.rs.bk
 

@@ -87,7 +87,6 @@ pub extern "C" fn accept4(
 
 #[no_mangle]
 pub extern "C" fn getpid() -> libc::pid_t {
-    println!("Shim `getpid` called!");
     unsafe {
         let original_getpid =
             dlsym::call_original_getpid().expect("Failed to find the original accept4");
