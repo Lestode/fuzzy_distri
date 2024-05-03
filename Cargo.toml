@@ -1,8 +1,4 @@
 [workspace]
 members = [
-    "src/experiments",
-    "src/dynamic_shims",
-    "src/fuzz-controller",
-    "src/ping_pong_sync/ping_service",
-    "src/ping_pong_sync/pong_service",  "src/ptrace_interrupt",
+    "src/injected_shims","src/new_ptrace" 
 ]
