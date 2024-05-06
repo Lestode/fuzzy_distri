@@ -1,4 +1,5 @@
 [workspace]
 members = [
-    "src/injected_shims","src/new_ptrace" 
+    "src/injected_shims","src/new_ptrace",
+    "src/experiment" 
 ]

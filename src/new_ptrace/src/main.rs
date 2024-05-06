@@ -6,8 +6,8 @@ use nix::{
     unistd::Pid,
 };
 use shared_memory::{Shmem, ShmemConf};
-use std::env;
 use std::process;
+use std::{env, thread};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
