@@ -6,8 +6,8 @@ use nix::{
     unistd::Pid,
 };
 use shared_memory::{Shmem, ShmemConf};
-use std::process;
-use std::{env, thread};
+use std::{env, io::Read, thread};
+use std::{fs::OpenOptions, mem, process};
 
 fn main() {
     let args: Vec<String> = env::args().collect();
@@ -43,23 +43,23 @@ fn main() {
     //ptrace::detach(pid, None);
 
     /*Here we simply make sure that we're able to read from the shared memory */
-    unsafe {
-        get_handler_pointer();
-    }
+    get_handler_pointer();
 }
 
-unsafe fn get_handler_pointer() -> usize {
-    let shmem = ShmemConf::new()
-        .size(4096)
-        .os_id("handler_addresses")
-        .open()
-        .expect("Couldn't open the shared memory segment");
+fn get_handler_pointer() -> usize {
+    let mut mq = OpenOptions::new()
+        .read(true)
+        .create(true)
+        .open("/handler_addres")
+        .expect("Failed to open the message queue");
+    // Buffer to hold the incoming bytes, the size of usize
+    let mut buffer = [0u8; mem::size_of::<usize>()];
 
-    unsafe {
-        // Get a mutable raw pointer to the shared memory
-        let my_ptr = shmem.as_ptr() as *const usize;
-        let original_function_pointer = *my_ptr as *const () as usize;
-        println!("function pointer: {}", original_function_pointer);
-        return original_function_pointer;
-    }
+    // Receive the message
+    mq.read(&mut buffer).expect("Failed to receive message");
+
+    // Convert the received bytes back to usize
+    let received_address = usize::from_ne_bytes(buffer);
+    println!("Received address: {:x}", received_address);
+    received_address
 }

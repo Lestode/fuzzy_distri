@@ -11,4 +11,5 @@ crate-type = ["cdylib"]
 [dependencies]
 ctor = "0.2.8"
 libc = "0.2.154"
+posix_mq = "3771.0.0"
 shared_memory = "0.12.4"
