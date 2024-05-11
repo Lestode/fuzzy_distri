@@ -6,5 +6,6 @@ edition = "2021"
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
+libc = "0.2.154"
 nix =  {version = "0.28.0", features = ["ptrace", "process"]}
 shared_memory = "0.12.4"

@@ -1,9 +1,14 @@
-use libc::getpid;
-use shared_memory::{Shmem, ShmemConf};
-use std::thread;
-use std::time::Duration;
+use std::{
+    thread,
+    time::{Duration, Instant},
+};
 
 fn main() {
-    let pid = unsafe { getpid() };
-    println!("Process ID: {}", pid);
+    println!("main launched");
+    let start = Instant::now();
+    while start.elapsed() < Duration::from_secs(30) {
+        let pid = unsafe { libc::getpid() };
+        println!("Process ID obtained in main: {}", pid);
+        thread::sleep(Duration::from_secs(1)); // Sleep for a bit to avoid spamming
+    }
 }
