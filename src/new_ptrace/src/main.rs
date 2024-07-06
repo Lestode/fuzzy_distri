@@ -42,14 +42,10 @@ fn main() {
                     println!("Intercepted getpid() call!");
                     // Memory address of the syscall instruction
                     let syscall_address = regs.rip - 2; // Adjust if necessary
-
-                    // Read the 8 bytes starting at syscall_address
-                    let original_instruction =
-                        read_memory(pid, syscall_address).expect("Failed to read instruction");
-                    let bytes: [u8; 8] = original_instruction.to_ne_bytes();
-
-                    println!("Original instruction at 0x{:x}: {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x} {:02x}",
-                                 syscall_address, bytes[0], bytes[1], bytes[2], bytes[3], bytes[4], bytes[5], bytes[6], bytes[7]);
+                    unsafe {
+                        modify_getpid_with_padding(pid, syscall_address, handler_adress)
+                            .expect("modifying pid failed")
+                    }
                 }
             }
 
@@ -90,15 +86,15 @@ fn read_shared_memory(shm_name: &str) -> Result<usize, String> {
 fn read_memory(pid: Pid, addr: u64) -> Result<i64, nix::Error> {
     ptrace::read(pid, addr as *mut _)
 }
-unsafe fn modify_getpid_with_padding(pid: Pid, syscall_address: u64) -> Result<(), nix::Error> {
+unsafe fn modify_getpid_with_padding(
+    pid: Pid,
+    syscall_address: u64,
+    handler_address: usize,
+) -> Result<(), nix::Error> {
     // Read 16 bytes starting from the syscall instruction
-    let mut instructions = [0u64; 2];
-    instructions[0] = ptrace::read(pid, syscall_address as *mut _)?
-        .try_into()
-        .unwrap();
-    instructions[1] = ptrace::read(pid, (syscall_address + 8) as *mut _)?
-        .try_into()
-        .unwrap();
+    let mut instructions = [0i64; 2];
+    instructions[0] = ptrace::read(pid, syscall_address as *mut _).expect("read memory");
+    instructions[1] = ptrace::read(pid, (syscall_address + 8) as *mut _).expect("read memory");
 
     let bytes: [u8; 16] = unsafe { std::mem::transmute(instructions) };
 
@@ -108,30 +104,51 @@ unsafe fn modify_getpid_with_padding(pid: Pid, syscall_address: u64) -> Result<(
        bytes[5] == 0x90 && bytes[6] == 0x90 && bytes[7] == 0x90
     // three NOPs
     {
+        print_current_instructions(pid, syscall_address)?;
+        let insert_address = syscall_address - 7;
+        // Construct the new instruction sequence:
+        // movabs rax, handler_address (10 bytes)
+        // call rax (2 bytes)
+        // nop (1 byte to make it 13 bytes total)
+        let mut new_bytes = [0u8; 16]; // Use 16 bytes for full 2-word write
+        new_bytes[0] = 0x48; // REX.W prefix
+        new_bytes[1] = 0xB8; // MOV RAX, imm64 opcode
+        new_bytes[2..10].copy_from_slice(&(handler_address as u64).to_le_bytes());
+        new_bytes[10] = 0xFF; // CALL opcode
+        new_bytes[11] = 0xD0; // ModR/M byte for CALL RAX
+        new_bytes[12] = 0x90; // NOP
+
+        println!("New instructions to write: {:02x?}", &new_bytes[..13]);
+
+        // Write the new instructions in 2 8-byte chunks
+        for i in 0..2 {
+            let chunk = u64::from_le_bytes(new_bytes[i * 8..(i + 1) * 8].try_into().unwrap());
+            ptrace::write(
+                pid,
+                (insert_address - i as u64 * 8) as *mut _,
+                chunk as *mut _,
+            )?;
+        }
+
+        println!("Modified instructions at address 0x{:x}", insert_address);
+        print_current_instructions(pid, syscall_address)?;
+    }
+    Ok(())
+}
+
+fn print_current_instructions(pid: Pid, address: u64) -> Result<(), nix::Error> {
+    let instructions = [
+        ptrace::read(pid, address as *mut _)?,
+        ptrace::read(pid, (address + 8) as *mut _)?,
+    ];
+
+    println!("Current instructions at 0x{:x}:", address);
+    for instruction in instructions.iter() {
+        let bytes = instruction.to_le_bytes();
         println!(
-            "Found getpid with padding at address 0x{:x}",
-            syscall_address
+            "  {:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}{:02x}",
+            bytes[7], bytes[6], bytes[5], bytes[4], bytes[3], bytes[2], bytes[1], bytes[0]
         );
-
-        // Modify the instruction sequence
-        let modified_instructions = [
-            (instructions[0] & 0xFFFFFFFFFFu64) | (0x90909048u64 << 40),
-            (instructions[1] & 0xFFFFFFFF00000000u64) | 0x90909090u64,
-        ];
-
-        // Write back the modified instructions
-        ptrace::write(
-            pid,
-            syscall_address as *mut _,
-            modified_instructions[0] as *mut _,
-        )?;
-        ptrace::write(
-            pid,
-            (syscall_address + 8) as *mut _,
-            modified_instructions[1] as *mut _,
-        )?;
-
-        println!("Modified instructions at address 0x{:x}", syscall_address);
     }
 
     Ok(())
