@@ -24,20 +24,14 @@ run_experiment_shims:
 run_experiments_ptrace:
 	cd $(experiment) && \
 	cargo build && \
-	sudo /home/user/projects/fuzzy_distri/target/debug/experiment & \
-	app_pid=$$! && \
-	cd $(new_ptrace) && \
-	cargo build && \
-	/home/user/projects/fuzzy_distri/target/debug/new_ptrace $$app_pid
-
-run_experiments_ptrace_debug:
-	cd $(experiment) && \
-	cargo build && \
-	sudo /home/user/projects/fuzzy_distri/target/debug/experiment & \
-	app_pid=$$!; \
-	cd $(new_ptrace) && \
-	cargo build && \
-	sudo /home/user/projects/fuzzy_distri/target/debug/new_ptrace $$app_pid
+	( \
+		sudo LD_PRELOAD=$(LIB_DIR) /home/user/Projects/fuzzy_distri/target/debug/experiment & \
+		app_pid=$$! && \
+		app_pid=$$(($$app_pid + 3)) && \
+		cd $(new_ptrace) && \
+		cargo build && \
+		sudo /home/user/Projects/fuzzy_distri/target/debug/new_ptrace $$app_pid \
+	)
 
 
 

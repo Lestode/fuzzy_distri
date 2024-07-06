@@ -12,7 +12,6 @@ __attribute__((constructor)) void shared_memory_constructor()
     const char *name = "/mysharedmem";
     int shm_fd;
     void *ptr;
-    const char *message = "50";
     // Create the shared memory object
     shm_fd = shm_open(name, O_CREAT | O_RDWR, 0666);
     if (shm_fd == -1)
@@ -36,7 +35,6 @@ __attribute__((constructor)) void shared_memory_constructor()
 
     uintptr_t func_addr = (uintptr_t)getpid;
     memcpy(ptr, &func_addr, sizeof(func_addr));
-    sprintf(ptr, "%s", message);
 }
 
 pid_t my_getpid()
